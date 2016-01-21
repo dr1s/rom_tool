@@ -1,5 +1,4 @@
 #include "lib.h"
-#include "main.h"
 #include "ncsd.h"
 
 typedef enum
@@ -10,11 +9,13 @@ typedef enum
 
 void app_title(void);
 void help(char *app_name);
+void free_buffers(CCI_CONTEXT *ctx);
+
 
 int main(int argc, char *argv[])
 {	
 	//Filter Out Bad number of arguments
-	if (argc < 2){
+	if (argc < 3){
 		printf("[!] Must Specify Arguments\n");
 		help(argv[0]);
 		return ARGC_FAIL;
@@ -27,7 +28,7 @@ int main(int argc, char *argv[])
 		if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0){
 			help(argv[0]);
 			free_buffers(ctx);
-			return ARGC_FAIL;
+			return 0;
 		}
 		else if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--info") == 0)
 			ctx->flags[info] = True;
@@ -46,7 +47,7 @@ int main(int argc, char *argv[])
 			ctx->outfile.arg_len = strlen(argv[i+1]);
 			ctx->outfile.argument = malloc(ctx->outfile.arg_len);
 			if(ctx->outfile.argument == NULL){
-				printf("[!] MEM ERROR\n");
+				puts("[!] MEM ERROR\n");
 				return Fail;
 			}
 			memcpy(ctx->outfile.argument,argv[i+1],ctx->outfile.arg_len+1);
@@ -56,24 +57,24 @@ int main(int argc, char *argv[])
 			ctx->outfile.arg_len = strlen(argv[i]+10);
 			ctx->outfile.argument = malloc(ctx->outfile.arg_len);
 			if(ctx->outfile.argument == NULL){
-				printf("[!] MEM ERROR\n");
+				puts("[!] MEM ERROR\n");
 				return Fail;
 			}
 			memcpy(ctx->outfile.argument,argv[i]+10,ctx->outfile.arg_len+1);
 		}
 		else if(i == argc-1){
+			FILE *cci = fopen(argv[i],"rb");
+			if(cci == NULL){
+				printf("[!] Failed to open '%s', last argument must be a CCI file.\n",argv[i]);
+				return Fail;
+			}
 			ctx->cci_file.arg_len = strlen(argv[i]);
 			ctx->cci_file.argument = malloc(ctx->cci_file.arg_len+1);
 			if(ctx->cci_file.argument == NULL){
-				printf("[!] MEM ERROR\n");
+				puts("[!] MEM ERROR\n");
 				return Fail;
 			}
 			memcpy(ctx->cci_file.argument,argv[i],ctx->cci_file.arg_len+1);
-			FILE *cci = fopen(ctx->cci_file.argument,"rb");
-			if(cci == NULL){
-				printf("[!] Failed to open '%s'\n",ctx->cci_file.argument);
-				return 1;
-			}
 			fclose(cci);
 		}
 	}
